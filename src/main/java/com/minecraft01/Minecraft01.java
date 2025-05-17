@@ -82,9 +82,8 @@ public class Minecraft01 implements ModInitializer {
 	}
 
 	public int executeAlert(ServerCommandSource source, String message) {
-		ConfigHandler.loadConfig();
 		try {
-			String webhook = ConfigHandler.config.alertWebhook;
+			String webhook = ConfigHandler.config.alertWebHook;
 			URL url = URI.create(webhook).toURL();
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
@@ -130,9 +129,8 @@ public class Minecraft01 implements ModInitializer {
 	}
 
 	public int executeAnnounce(ServerCommandSource source, String message) {
-		ConfigHandler.loadConfig();
 		try {
-			String webhook = ConfigHandler.config.announceWebhook;
+			String webhook = ConfigHandler.config.annoucementWebHook;
 			URL url = URI.create(webhook).toURL();
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
@@ -167,9 +165,8 @@ public class Minecraft01 implements ModInitializer {
 	}
 
 	public int executeMark(ServerCommandSource source, String locationName) {
-		ConfigHandler.loadConfig();
 		try {
-			String webhook = ConfigHandler.config.cartographerWebhook;
+			String webhook = ConfigHandler.config.cartographerWebHook;
 			URL url = URI.create(webhook).toURL();
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
