@@ -15,28 +15,23 @@ import static net.minecraft.server.command.CommandManager.literal;
 
 import net.minecraft.util.math.BlockPos;
 //player tracking
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.BlockPos;
 
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
-import java.io.BufferedReader;
 //https libraries for webhook
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Vector;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 
+
 public class Minecraft01 implements ModInitializer {
+
 	public static final String MOD_ID = "minecraft01";
 
 	// This logger is used to write text to the console and the log file.
@@ -49,6 +44,7 @@ public class Minecraft01 implements ModInitializer {
 		// This code runs as soon as Minecraft is in a mod-load-ready state.
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
+		ConfigHandler.loadConfig();
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			registerCommands(dispatcher);
 		});
@@ -85,13 +81,10 @@ public class Minecraft01 implements ModInitializer {
 		dispatcher.register(literal("ping").executes(context -> executePing(context.getSource())));
 	}
 
-	private static String escapeJson(String str) {
-		return str.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
-	}
-
 	public int executeAlert(ServerCommandSource source, String message) {
+		ConfigHandler.loadConfig();
 		try {
-			String webhook = "https://discord.com/api/webhooks/1373191908658249788/pS7KahQOnCgTXU0lsWYVlHcfukd4iwoCZwRjrxztzZuYMY9A7ngB-af8mbP2QRPl_Xtm";
+			String webhook = ConfigHandler.config.alertWebhook;
 			URL url = URI.create(webhook).toURL();
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
@@ -110,10 +103,10 @@ public class Minecraft01 implements ModInitializer {
 			JsonArray embeds = new JsonArray();
 			JsonObject embed = new JsonObject();
 			JsonObject author = new JsonObject();
-			author.addProperty("name",username);
+			author.addProperty("name", username);
 			author.addProperty("icon_url", avatar);
-			embed.add("author",author);
-			embed.addProperty("title", position.getX() + position.getY() + position.getZ());
+			embed.add("author", author);
+			embed.addProperty("title", "" + position.getX() + "," + position.getY() + "," + position.getZ());
 			embed.addProperty("description", message);
 			embed.addProperty("color", 15548997);
 			embeds.add(embed);
@@ -137,8 +130,9 @@ public class Minecraft01 implements ModInitializer {
 	}
 
 	public int executeAnnounce(ServerCommandSource source, String message) {
+		ConfigHandler.loadConfig();
 		try {
-			String webhook = "https://discord.com/api/webhooks/1373191908658249788/pS7KahQOnCgTXU0lsWYVlHcfukd4iwoCZwRjrxztzZuYMY9A7ngB-af8mbP2QRPl_Xtm";
+			String webhook = ConfigHandler.config.announceWebhook;
 			URL url = URI.create(webhook).toURL();
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
@@ -150,8 +144,12 @@ public class Minecraft01 implements ModInitializer {
 			var player = source.getPlayer();
 			String username = player.getName().getString();
 			String avatar = "https://minotar.net/avatar/" + username;
-			String jsonPayload = String.format("{\"username\":\"%s\",\"avatar_url\":\"%s\",\"content\":\"%s\"}",
-					username, avatar, escapeJson(message));
+			JsonObject payload = new JsonObject();
+			payload.addProperty("username", username);
+			payload.addProperty("avatar_url", avatar);
+			payload.addProperty("content", message);
+			String jsonPayload = new Gson().toJson(payload);
+
 			// Launche Payload
 			try (OutputStream os = connection.getOutputStream()) {
 				byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
@@ -169,8 +167,9 @@ public class Minecraft01 implements ModInitializer {
 	}
 
 	public int executeMark(ServerCommandSource source, String locationName) {
+		ConfigHandler.loadConfig();
 		try {
-			String webhook = "https://discord.com/api/webhooks/1373220129038536735/tul7CxBKRF9hYIoFXICzpeYXuYylT1oGjpX2ClzYodU9_ZeO_-Zuq4Cog951hGt_YGQO";
+			String webhook = ConfigHandler.config.cartographerWebhook;
 			URL url = URI.create(webhook).toURL();
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
@@ -180,6 +179,8 @@ public class Minecraft01 implements ModInitializer {
 
 			// create the payload
 			var player = source.getPlayer();
+			String username = player.getName().getString();
+			String avatar = "https://minotar.net/avatar/" + username;
 			BlockPos position = player.getBlockPos();
 			RegistryEntry<Biome> biomeEntry = player.getWorld().getBiome(position);
 			if (locationName == "") {
@@ -188,7 +189,22 @@ public class Minecraft01 implements ModInitializer {
 						.orElse("unknown");
 				locationName = biomeId;
 			}
-			String jsonPayload = String.format("{\"content\":\"%s\"}", escapeJson(position + ">" + locationName));
+			JsonObject payload = new JsonObject();
+			payload.addProperty("username", "Cartographer");
+			payload.addProperty("avatar_url",
+					"https://static.wikia.nocookie.net/minecraft_gamepedia/images/6/66/Plains_Cartographer.png/revision/latest/scale-to-width-down/70?cb=20200310022433");
+			JsonArray embeds = new JsonArray();
+			JsonObject embed = new JsonObject();
+			JsonObject author = new JsonObject();
+			author.addProperty("name", username);
+			author.addProperty("icon_url", avatar);
+			embed.add("author", author);
+			embed.addProperty("title", locationName);
+			embed.addProperty("description", "" + position.getX() + "," + position.getY() + "," + position.getZ());
+			embed.addProperty("color", 5763719);
+			embeds.add(embed);
+			payload.add("embeds", embeds);
+			String jsonPayload = new Gson().toJson(payload);
 
 			// Launch Payload
 			try (OutputStream os = connection.getOutputStream()) {
@@ -211,5 +227,4 @@ public class Minecraft01 implements ModInitializer {
 		source.sendFeedback(() -> Text.literal("Pong"), false);
 		return 1;
 	}
-
 }
