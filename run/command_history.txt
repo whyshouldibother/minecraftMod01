@@ -1,0 +1,34 @@
+/list
+/hello
+/ok
+/hello
+/help
+/hello
+/announce
+/ping
+/announce hello world how are you doing
+/announce hello
+/reload
+/announce hello
+/announce hello world
+/announce hello
+/announce testing message
+/announce hello bitches
+/announce testing bitches
+/announce @itsuourefined hello bitches
+/announce @itsuorefined hello
+/announce @itsuourefined hello bitches
+/reload
+/announce @itsuourefined hello bitches
+/announce <@itsuourefined> hello bitches
+/announce '<@'itsuourefined'>' hello bitches
+/announce '<@'everyone'>' hello bitches
+/announce '<@everyone>' hello bitches
+/announce <@everyone> hello bitches
+/announce @itsuourefined hello bitches
+/announce @wwwwwwwwwwww0000
+/announce @all
+/announce @here
+/announce @Admin
+/announce hello @everyone testing
+/announce testing

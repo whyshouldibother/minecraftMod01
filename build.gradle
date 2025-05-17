@@ -1,0 +1,79 @@
+plugins {
+    id 'fabric-loom' version "${loom_version}"
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName.set(project.archives_base_name) // Use setter syntax for Gradle 7+
+}
+
+repositories {
+    // Loom auto-adds essential repos; add custom repos here if needed
+}
+
+loom {
+    splitEnvironmentSourceSets()
+
+    mods {
+        minecraft01 {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+}
+
+processResources {
+    inputs.property("version", project.version)
+
+    filesMatching("fabric.mod.json") {
+        expand("version": inputs.properties.version)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release.set(21) // safer syntax
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+
+    // Configure Java toolchain to Java 21
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+
+    withSourcesJar() // generates sources jar automatically
+}
+
+jar {
+    inputs.property("archivesName", project.base.archivesName.get())
+
+    from("LICENSE") {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = project.archives_base_name
+            from(components.java)
+        }
+    }
+
+    repositories {
+        // Add your publishing repositories here
+    }
+}
