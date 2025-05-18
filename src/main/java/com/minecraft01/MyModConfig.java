@@ -4,4 +4,5 @@ public class MyModConfig {
 		public String annoucementWebHook;
 		public String alertWebHook;
 		public String cartographerWebHook;
+		public String relayWebHook;
 }

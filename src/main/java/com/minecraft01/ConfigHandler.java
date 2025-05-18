@@ -26,6 +26,9 @@ public class ConfigHandler {
             }
         } else {
             config = new MyModConfig();
+            config.alertWebHook="";
+            config.annoucementWebHook="";
+            config.cartographerWebHook="";
             saveConfig(); // Save default config
         }
     }

@@ -28,8 +28,8 @@ import java.nio.charset.StandardCharsets;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-
-
+import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
+import net.minecraft.server.network.ServerPlayerEntity;
 public class Minecraft01 implements ModInitializer {
 
 	public static final String MOD_ID = "minecraft01";
@@ -48,9 +48,16 @@ public class Minecraft01 implements ModInitializer {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			registerCommands(dispatcher);
 		});
+		ServerMessageEvents.CHAT_MESSAGE.register((message, sender, params) -> {
+            ServerPlayerEntity player = sender;
+            String username = player.getName().getString();
+            String content = message.getContent().getString(); // raw message text
+
+			forwardDiscord(username, content);
+            // You can add additional logic here if needed
+        });
 		LOGGER.info("minecraft01 Initialized");
 	}
-
 	public void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher) {
 		dispatcher.register(
 				literal("announce")
@@ -79,6 +86,38 @@ public class Minecraft01 implements ModInitializer {
 									return executeMark(context.getSource(), locationName);
 								})));
 		dispatcher.register(literal("ping").executes(context -> executePing(context.getSource())));
+	}
+
+	public void forwardDiscord(String username, String message) {
+		try {
+			String webhook = ConfigHandler.config.relayWebHook;
+			URL url = URI.create(webhook).toURL();
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+			connection.setRequestMethod("POST");
+			connection.setRequestProperty("Content-Type", "application/json");
+			connection.setDoOutput(true);
+
+			String avatar = "https://minotar.net/avatar/" + username;
+			JsonObject payload = new JsonObject();
+			payload.addProperty("username", username);
+			payload.addProperty("avatar_url", avatar);
+			payload.addProperty("content", message);
+			String jsonPayload = new Gson().toJson(payload);
+
+			// Launche Payload
+			try (OutputStream os = connection.getOutputStream()) {
+				byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
+				os.write(input);
+			}
+
+			int responseCode = connection.getResponseCode();
+			if (responseCode != 204) { // Discord returns 204 No Content on success
+				LOGGER.error("Discord webhook failed: " + responseCode);
+			}
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+		}
 	}
 
 	public int executeAlert(ServerCommandSource source, String message) {

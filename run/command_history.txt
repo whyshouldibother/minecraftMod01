@@ -32,3 +32,4 @@
 /announce @Admin
 /announce hello @everyone testing
 /announce testing
+/exit
